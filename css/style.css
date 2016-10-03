@@ -1,0 +1,38 @@
+.StarsFrame, .ButtonFrame, .NumberFrame{
+  width:  30%;
+  float: left;
+}
+
+.ButtonFrame {
+  width: 10%;
+  float: left;
+  text-align: center;
+}
+.AnswerFrame{
+  width: 70%;
+}
+.Number{
+  background-color: grey;
+  width: 50px;
+  height: 50px;
+  color:white;
+  text-align: center;
+  border-radius: 50%;
+  padding-top:15px;
+  margin-right: 5px;
+  cursor: pointer;
+  display: inline-block;
+}
+.Number:hover{
+  box-shadow: 0 1px 6px 0 rgba(0,0,0,.3);
+  transition: box-shadow 150ms cubic-bezier(.4,0,1,1);
+}
+.Number.selected{
+  background-color: #cec6c6;
+  cursor: not-allowed;
+}
+
+.star {
+  margin-right: 5px;
+  font-size: 50px;
+}
