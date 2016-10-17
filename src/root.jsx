@@ -18,10 +18,25 @@ class NewTodo extends React.Component{
 }
 
 class TodoList extends React.Component{
+  constructor(){
+    super();
+    this.completeTodo = this.completeTodo.bind(this);
+    this.removeTodo = this.removeTodo.bind(this);
+  }
+  completeTodo(index){
+    this.props.onCompleteTodo(index);
+  }
+  removeTodo(index){
+    this.props.onRemoveTodo(index);
+  }
   render(){
     var list = [];
     for(var i = 0; i < this.props.todos.length; i++){
-      list.push(<li><label>{this.props.todos[i].description}</label><button className="destroy"></button></li>)
+      var className = this.props.todos[i].status == "COMPLETED" ? "completed" : "";
+      list.push(<li className = {className}>
+        <input type="checkbox" checked={className == "completed" ? 'checked': ''} className="markAsDone" onClick={this.completeTodo.bind(null, i)}></input>
+        <label>{this.props.todos[i].description}</label>
+        <button className="destroy" onClick={this.removeTodo.bind(null, i)}></button></li>)
     }
 
     return (
@@ -50,15 +65,23 @@ class App extends React.Component {
   constructor(props, context){
     super(props, context);
     this.addTodo = this.addTodo.bind(this);
+    this.completeTodo = this.completeTodo.bind(this);
+    this.removeTodo = this.removeTodo.bind(this);
   }
-  addTodo(data){    
+  addTodo(data){
     store.dispatch(addAction(data))
+  }
+  completeTodo(index){
+    store.dispatch(completedAction(index))
+  }
+  removeTodo(index){
+    store.dispatch(removeAction(index))
   }
     render() {
       return (
         <div className="todo-app">
           <NewTodo onAddTodo={this.addTodo}/>
-          <TodoList todos={this.props.todos} />
+          <TodoList todos={this.props.todos} onCompleteTodo={this.completeTodo} onRemoveTodo = {this.removeTodo} />
           <TodoFooter todos={this.props.todos} />
         </div>
       )
@@ -72,7 +95,7 @@ var connect = ReactRedux.connect;
 var dispatch = ReactRedux.dispatch;
 
 var initialState = {
-  todos: [{id: 1, description: "Breakfast"}]
+  todos: [{id: 1, description: "Breakfast", status: "PENDING"}]
 };
 
 var addAction = function (data){
@@ -82,12 +105,56 @@ var addAction = function (data){
   }
 };
 
+var completedAction = function(index){
+  return {
+    type: "COMPLETED",
+    data: index
+  }
+};
+
+var removeAction =  function(index){
+  return {
+    type: "REMOVED",
+    data: index
+  }
+}
+
 var reducer = function(state, action){
   var newState = state;
   switch(action.type){
     case "ADD_TODO":
-      return {todos: state.todos.concat({description:action.data})};
-      console.log("Added");
+     var newState = {
+       todos: [
+       ...state.todos,
+       {
+         id: state.todos.length + 1,
+         description: action.data,
+         status: "PENDING"
+       }]
+     };
+      return newState;
+    case "COMPLETED":
+      var newState = {
+        todos: [
+          ...state.todos.slice(0, action.data),
+          {
+            id:state.todos[action.data].id,
+            description:state.todos[action.data].description,
+            status: state.todos[action.data].status == "COMPLETED" ? "PENDING" : "COMPLETED"
+          },
+          ...state.todos.slice(action.data+1)
+        ]
+      }
+      return newState;
+
+    case "REMOVED":
+      var newState = {
+        todos: [
+          ...state.todos.slice(0, action.data),
+          ...state.todos.slice(action.data+1)
+        ]
+      };
+      return newState;
   }
   return newState;
 }
@@ -102,7 +169,9 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    onAddTodo: bindActionCreators(addAction, dispatch)
+    onAddTodo: bindActionCreators(addAction, dispatch),
+    onComplete: bindActionCreators(completedAction, dispatch),
+    onRemove: bindActionCreators(removeAction, dispatch)
   };
 }
 
